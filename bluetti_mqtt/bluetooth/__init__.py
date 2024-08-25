@@ -3,13 +3,13 @@ import re
 from typing import Set
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
-from bluetti_mqtt.core import BluettiDevice, AC200M, AC200L, AC300, AC500, AC180, AC60, AC70, EP500, EP500P, EP600, EB3A
+from bluetti_mqtt.core import BluettiDevice, AC200M, AC200L, AC300, AC500, AC180, AC60, AC70, EP500, EP500P, EP600, EB3A, AC2A
 from .client import BluetoothClient
 from .exc import BadConnectionError, ModbusError, ParseError
 from .manager import MultiDeviceManager
 
 
-DEVICE_NAME_RE = re.compile(r'^(AC200M|AC200L|AC300|AC500|AC60|AC70|AC180|EP500P|EP500|EP600|EB3A)(\d+)$')
+DEVICE_NAME_RE = re.compile(r'^(AC200M|AC200L|AC300|AC500|AC60|AC70|AC180|EP500P|EP500|EP600|EB3A|AC2A)(\d+)$')
 
 
 async def scan_devices():
@@ -25,6 +25,8 @@ async def scan_devices():
 
 def build_device(address: str, name: str):
     match = DEVICE_NAME_RE.match(name)
+    if not match:
+        raise Exception("device not supported (does not match device name regexp)")
     if match[1] == 'AC200M':
         return AC200M(address, match[2])
     if match[1] == 'AC200L':
@@ -47,7 +49,9 @@ def build_device(address: str, name: str):
         return EP600(address, match[2])
     if match[1] == 'EB3A':
         return EB3A(address, match[2])
-
+    if match[1] == 'AC2A':
+        return AC2A(address, match[2])
+    raise Exception(f"unable to find device type for {match[1]}")
 
 async def check_addresses(addresses: Set[str]):
     logging.debug(f'Checking we can connect: {addresses}')
