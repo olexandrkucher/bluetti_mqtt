@@ -10,6 +10,7 @@ can be sent to the ``bluetti/command/[DEVICE NAME]/[PROPERTY]`` topic.
 
 Supported Devices
 -----------------
+- AC2A (beta)
 - AC60
 - AC70
 - AC180
