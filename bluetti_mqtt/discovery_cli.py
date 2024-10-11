@@ -1,18 +1,18 @@
 import argparse
 import asyncio
 import base64
-from bleak import BleakError, BleakScanner
-from io import TextIOWrapper
 import json
-import sys
 import textwrap
 import time
-from typing import cast
+from typing import cast, TextIO
+
+from bleak import BleakError, BleakScanner
+
 from bluetti_mqtt.bluetooth import BluetoothClient, ModbusError, ParseError, BadConnectionError
 from bluetti_mqtt.core import ReadHoldingRegisters
 
 
-def log_packet(output: TextIOWrapper, data: bytes, command: ReadHoldingRegisters):
+def log_packet(output: TextIO, data: bytes, command: ReadHoldingRegisters):
     log_entry = {
         'type': 'client',
         'time': time.strftime('%Y-%m-%d %H:%M:%S %z', time.localtime()),
@@ -22,7 +22,7 @@ def log_packet(output: TextIOWrapper, data: bytes, command: ReadHoldingRegisters
     output.write(json.dumps(log_entry) + '\n')
 
 
-def log_invalid(output: TextIOWrapper, err: Exception, command: ReadHoldingRegisters):
+def log_invalid(output: TextIO, err: Exception, command: ReadHoldingRegisters):
     log_entry = {
         'type': 'client',
         'time': time.strftime('%Y-%m-%d %H:%M:%S %z', time.localtime()),
@@ -32,7 +32,7 @@ def log_invalid(output: TextIOWrapper, err: Exception, command: ReadHoldingRegis
     output.write(json.dumps(log_entry) + '\n')
 
 
-async def log_command(client: BluetoothClient, command: ReadHoldingRegisters, log_file: TextIOWrapper):
+async def log_command(client: BluetoothClient, command: ReadHoldingRegisters, log_file: TextIO):
     response_future = await client.perform(command)
     try:
         response = cast(bytes, await response_future)
@@ -125,4 +125,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()

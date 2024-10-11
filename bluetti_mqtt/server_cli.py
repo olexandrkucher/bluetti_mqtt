@@ -3,9 +3,10 @@ import asyncio
 import logging
 import os
 import signal
-from typing import List
-import warnings
 import sys
+import warnings
+from typing import List
+
 from bluetti_mqtt.bluetooth import scan_devices
 from bluetti_mqtt.bus import EventBus
 from bluetti_mqtt.device_handler import DeviceHandler

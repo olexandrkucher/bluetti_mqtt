@@ -125,7 +125,7 @@ class AC60(BluettiDevice):
             ReadHoldingRegisters(6100, 100),
             ReadHoldingRegisters(6300, 52),
         ]
-    
+
     @property
     def writable_ranges(self) -> List[range]:
         return [range(2000, 2225)]

@@ -1,9 +1,11 @@
 import asyncio
-from enum import Enum, auto, unique
 import logging
+from enum import Enum, auto, unique
 from typing import Union
+
 from bleak import BleakClient, BleakError
 from bleak.exc import BleakDeviceNotFoundError
+
 from bluetti_mqtt.core import DeviceCommand
 from .exc import BadConnectionError, ModbusError, ParseError
 
@@ -65,7 +67,7 @@ class BluetoothClient:
                 elif self.state == ClientState.DISCONNECTING:
                     await self._disconnect()
                 else:
-                    logging.warn(f'Unexpected current state {self.state}')
+                    logging.warning(f'Unexpected current state {self.state}')
                     self.state = ClientState.NOT_CONNECTED
         finally:
             # Ensure that we disconnect
@@ -99,7 +101,8 @@ class BluetoothClient:
         try:
             await self.client.start_notify(
                 self.NOTIFY_UUID,
-                self._notification_handler)
+                self._notification_handler
+            )
             self.state = ClientState.READY
         except BleakError:
             self.state = ClientState.DISCONNECTING
@@ -162,7 +165,7 @@ class BluetoothClient:
 
     async def _disconnect(self):
         await self.client.disconnect()
-        logging.warn(f'Delayed reconnect to {self.address} after error')
+        logging.warning(f'Delayed reconnect to {self.address} after error')
         await asyncio.sleep(5)
         self.state = ClientState.NOT_CONNECTED
 

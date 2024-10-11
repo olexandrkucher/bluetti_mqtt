@@ -1,13 +1,14 @@
 import argparse
 import asyncio
 import base64
-from bleak import BleakError
-from io import TextIOWrapper
 import json
 import sys
 import textwrap
 import time
-from typing import cast
+from typing import cast, TextIO
+
+from bleak import BleakError
+
 from bluetti_mqtt.bluetooth import (
     check_addresses, scan_devices, BluetoothClient, ModbusError,
     ParseError, BadConnectionError
@@ -17,7 +18,7 @@ from bluetti_mqtt.core import (
 )
 
 
-def log_packet(output: TextIOWrapper, data: bytes, command: DeviceCommand):
+def log_packet(output: TextIO, data: bytes, command: DeviceCommand):
     log_entry = {
         'type': 'client',
         'time': time.strftime('%Y-%m-%d %H:%M:%S %z', time.localtime()),
@@ -27,7 +28,7 @@ def log_packet(output: TextIOWrapper, data: bytes, command: DeviceCommand):
     output.write(json.dumps(log_entry) + '\n')
 
 
-def log_invalid(output: TextIOWrapper, err: Exception, command: DeviceCommand):
+def log_invalid(output: TextIO, err: Exception, command: DeviceCommand):
     log_entry = {
         'type': 'client',
         'time': time.strftime('%Y-%m-%d %H:%M:%S %z', time.localtime()),
@@ -37,7 +38,7 @@ def log_invalid(output: TextIOWrapper, err: Exception, command: DeviceCommand):
     output.write(json.dumps(log_entry) + '\n')
 
 
-async def log_command(client: BluetoothClient, device: BluettiDevice, command: DeviceCommand, log_file: TextIOWrapper):
+async def log_command(client: BluetoothClient, device: BluettiDevice, command: DeviceCommand, log_file: TextIO):
     response_future = await client.perform(command)
     try:
         response = cast(bytes, await response_future)
@@ -122,4 +123,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()

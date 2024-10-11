@@ -1,12 +1,14 @@
 import asyncio
-from dataclasses import dataclass
-from enum import auto, Enum, unique
 import json
 import logging
 import re
+from dataclasses import dataclass
+from enum import auto, Enum, unique
 from typing import List, Optional
+
 from aiomqtt import Client, MqttError
 from paho.mqtt.client import MQTTMessage
+
 from bluetti_mqtt.bus import CommandMessage, EventBus, ParserMessage
 from bluetti_mqtt.core import BluettiDevice, DeviceCommand
 
@@ -148,18 +150,6 @@ NORMAL_DEVICE_FIELDS = {
         advanced=True,
         home_assistant_extra={
             'name': 'AC Output Mode',
-        }
-    ),
-    'ac_input_voltage': MqttFieldConfig(
-        type=MqttFieldType.NUMERIC,
-        setter=False,
-        advanced=False,
-        home_assistant_extra={
-            'name': 'AC Input Voltage',
-            'unit_of_measurement': 'V',
-            'device_class': 'voltage',
-            'state_class': 'measurement',
-            'force_update': True,
         }
     ),
     'ac_input_current': MqttFieldConfig(
@@ -606,7 +596,7 @@ class MQTTClient:
             logging.info('Connecting to MQTT broker...')
             try:
                 async with Client(
-#                    mqtt.CallbackAPIVersion.VERSION1,
+                    # mqtt.CallbackAPIVersion.VERSION1,
                     hostname=self.hostname,
                     port=self.port,
                     username=self.username,
@@ -684,17 +674,19 @@ class MQTTClient:
 
             # Figure out Home Assistant type
             if field.type == MqttFieldType.NUMERIC:
-                type = 'number' if field.setter else 'sensor'
+                ha_type = 'number' if field.setter else 'sensor'
             elif field.type == MqttFieldType.BOOL:
-                type = 'switch' if field.setter else 'binary_sensor'
+                ha_type = 'switch' if field.setter else 'binary_sensor'
             elif field.type == MqttFieldType.ENUM:
-                type = 'select' if field.setter else 'sensor'
+                ha_type = 'select' if field.setter else 'sensor'
             elif field.type == MqttFieldType.BUTTON:
-                type = 'button'
+                ha_type = 'button'
+            else:
+                ha_type = None
 
             # Publish config
             await client.publish(
-                f'homeassistant/{type}/{device.sn}_{name}/config',
+                f'homeassistant/{ha_type}/{device.sn}_{name}/config',
                 payload=payload(name, device, field).encode(),
                 retain=True
             )
@@ -729,18 +721,18 @@ class MQTTClient:
         # Parse the mqtt_message.topic
         m = COMMAND_TOPIC_RE.match(str(mqtt_message.topic))
         if not m:
-            logging.warn(f'unknown command topic: {mqtt_message.topic}')
+            logging.warning(f'unknown command topic: {mqtt_message.topic}')
             return
 
         # Find the matching device for the command
         device = next((d for d in self.devices if d.type == m[1] and d.sn == m[2]), None)
         if not device:
-            logging.warn(f'unknown device: {m[1]} {m[2]}')
+            logging.warning(f'unknown device: {m[1]} {m[2]}')
             return
 
         # Check if the device supports setting this field
         if not device.has_field_setter(m[3]):
-            logging.warn(f'Received command for unknown topic: {m[3]} - {mqtt_message.topic}')
+            logging.warning(f'Received command for unknown topic: {m[3]} - {mqtt_message.topic}')
             return
 
         cmd: DeviceCommand = None
@@ -758,7 +750,7 @@ class MQTTClient:
             else:
                 raise AssertionError(f'unexpected enum type: {field.type}')
         else:
-            logging.warn(f'Received command for unhandled topic: {m[3]} - {mqtt_message.topic}')
+            logging.warning(f'Received command for unhandled topic: {m[3]} - {mqtt_message.topic}')
             return
 
         await self.bus.put(CommandMessage(device, cmd))
@@ -811,7 +803,8 @@ class MQTTClient:
                 payload=str(msg.parsed['internal_dc_input_current']).encode()
             )
 
-    def _build_pack_details(self, parsed: dict):
+    @staticmethod
+    def _build_pack_details(parsed: dict):
         details = {}
         if 'pack_status' in parsed:
             details['status'] = parsed['pack_status'].name

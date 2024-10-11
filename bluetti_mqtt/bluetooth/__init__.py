@@ -1,13 +1,13 @@
 import logging
 import re
 from typing import Set
+
 from bleak import BleakScanner
-from bleak.backends.device import BLEDevice
-from bluetti_mqtt.core import BluettiDevice, AC200M, AC200L, AC300, AC500, AC180, AC180P, AC60, AC70, EP500, EP500P, EP600, EB3A, AC2A
+
+from bluetti_mqtt.core import AC200M, AC200L, AC300, AC500, AC180, AC180P, AC60, AC70, EP500, EP500P, EP600, EB3A, AC2A
 from .client import BluetoothClient
 from .exc import BadConnectionError, ModbusError, ParseError
 from .manager import MultiDeviceManager
-
 
 DEVICE_NAME_RE = re.compile(r'^(AC200M|AC200L|AC300|AC500|AC60|AC70|AC180|AC180P|EP500P|EP500|EP600|EB3A|AC2A)(\d+)$')
 
@@ -54,6 +54,7 @@ def build_device(address: str, name: str):
     if match[1] == 'AC2A':
         return AC2A(address, match[2])
     raise Exception(f"unable to find device type for {match[1]}")
+
 
 async def check_addresses(addresses: Set[str]):
     logging.debug(f'Checking we can connect: {addresses}')
