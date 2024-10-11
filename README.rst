@@ -2,6 +2,8 @@
 bluetti_mqtt
 ============
 
+This is a fork of https://github.com/ftrueck/bluetti_mqtt
+
 This tool provides an MQTT interface to Bluetti power stations. State will be
 published to the ``bluetti/state/[DEVICE NAME]/[PROPERTY]`` topic, and commands
 can be sent to the ``bluetti/command/[DEVICE NAME]/[PROPERTY]`` topic.
@@ -14,6 +16,7 @@ Supported Devices
 - AC60
 - AC70
 - AC180
+- AC180P
 - AC200L
 - AC200M
 - AC300
@@ -29,7 +32,7 @@ Installation
 
 .. code-block:: bash
 
-    $ pip install git+https://github.com/ftrueck/bluetti_mqtt
+    $ pip install git+https://github.com/olexandrkucher/bluetti_mqtt
 
 Usage
 -----
